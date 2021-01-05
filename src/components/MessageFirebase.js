@@ -1,9 +1,13 @@
 import React, { useState } from 'react';
 import { fb } from '../lib/firebase';
+import { useCollection } from 'react-firebase-hooks/firestore';
 
 const MessageFirebase = () => {
-  const [message, setMessage] = useState('');
   const db = fb.firestore();
+  const [message, setMessage] = useState('');
+  const [value, loading, error] = useCollection(db.collection('messages'), {
+    snapshotListenOptions: { includeMetadataChanges: true },
+  });
 
   const sendMessage = (event) => {
     event.preventDefault();
@@ -23,7 +27,12 @@ const MessageFirebase = () => {
     let msg = event.target.value;
     setMessage(msg);
   };
-
+  let list;
+  if (value) {
+    list = value.docs.map((doc) => {
+      return doc.data();
+    });
+  }
   return (
     <div>
       <h1>Firestore Messages</h1>
@@ -32,6 +41,15 @@ const MessageFirebase = () => {
         <input id="message" value={message} onChange={onChangeMessage} />
         <button>Send</button>
       </form>
+      {error && <strong>Error: {JSON.stringify(error)}</strong>}
+      {loading && <span>Messages: Loading...</span>}
+      {list && (
+        <ul>
+          {list.map((msg) => (
+            <li key={msg.message}>{msg.message}</li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 };
