@@ -1,14 +1,14 @@
-import React, { useState } from 'react';
-import { fb } from '../lib/firebase';
+import React, { useState, useContext } from 'react';
 import { useCollection } from 'react-firebase-hooks/firestore';
+import { FirebaseContext } from '../components/Firebase';
 
 const MessageFirebase = () => {
-  const db = fb.firestore();
+  const firebase = useContext(FirebaseContext);
+  const db = firebase.firestore();
   const [message, setMessage] = useState('');
   const [value, loading, error] = useCollection(db.collection('messages'), {
     snapshotListenOptions: { includeMetadataChanges: true },
   });
-
   const sendMessage = (event) => {
     event.preventDefault();
     const message = event.target.elements.message.value;
