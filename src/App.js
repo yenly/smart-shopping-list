@@ -24,21 +24,17 @@ function App() {
     setUserToken(userTokenInStorage);
   }, []);
 
-  const createUserToken = (event) => {
-    event.preventDefault();
+  const createUserToken = () => {
     const newToken = getToken();
-    setUserToken(JSON.stringify(newToken));
-    window.localStorage.setItem(
-      'shoppingListAppUser',
-      JSON.stringify(newToken),
-    );
+    setUserToken(newToken);
+    window.localStorage.setItem('shoppingListAppUser', newToken);
   };
   const addItemToList = (event) => {
     event.preventDefault();
     const itemName = event.target.itemName.value;
     const likelyToPurchase = Number(event.target.likelyToPurchase.value);
     const newItem = {
-      name: itemName.trim().toLowerCase(),
+      name: itemName.trim(),
       likelyToPurchase: likelyToPurchase,
       purchaseDate: null,
     };
@@ -56,7 +52,11 @@ function App() {
         <main>
           <Switch>
             <Route path="/list">
-              <ListItems />
+              {userToken ? (
+                <ListItems userToken={userToken} />
+              ) : (
+                <Redirect to="/" />
+              )}
             </Route>
             <Route path="/add">
               {!userToken ? (

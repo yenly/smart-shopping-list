@@ -26,7 +26,9 @@ const AddItem = ({ addItem }) => {
           onChange={onChangeItemName}
         />{' '}
         <br />
-        <label>How soon are you likely to buy again?</label>
+        <label htmlFor="likelyToPurchase">
+          How soon are you likely to buy again?
+        </label>
         <br />
         <select name="likelyToPurchase" id="likelyToPurchase">
           <option value="">--Please choose likelihood</option>
