@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import {
   BrowserRouter as Router,
   Switch,
@@ -10,20 +10,45 @@ import AddItem from './components/AddItem';
 import Navigation from './components/Navigation';
 import Home from './components/Home';
 import getToken from './lib/tokens';
+import { FirebaseContext } from './components/Firebase';
 
 function App() {
   const [userToken, setUserToken] = useState('');
+  const firebase = useContext(FirebaseContext);
+  const db = firebase.firestore();
+
+  useEffect(() => {
+    const userTokenInStorage = window.localStorage.getItem(
+      'shoppingListAppUser',
+    );
+    setUserToken(userTokenInStorage);
+  }, []);
 
   const createUserToken = (event) => {
     event.preventDefault();
     const newToken = getToken();
-    setUserToken(newToken);
+    setUserToken(JSON.stringify(newToken));
     window.localStorage.setItem(
       'shoppingListAppUser',
       JSON.stringify(newToken),
     );
   };
-  console.log({ userToken });
+  const addItemToList = (event) => {
+    event.preventDefault();
+    const itemName = event.target.itemName.value;
+    const likelyToPurchase = Number(event.target.likelyToPurchase.value);
+    const newItem = {
+      name: itemName.trim().toLowerCase(),
+      likelyToPurchase: likelyToPurchase,
+      purchaseDate: null,
+    };
+    if (userToken) {
+      db.collection(userToken)
+        .add(newItem)
+        .then((docRef) => console.log(`New item added: ${docRef.id}`))
+        .catch((error) => console.error(`Error adding item: ${error}`));
+    }
+  };
   return (
     <>
       <header>Smart Shopping List App</header>
@@ -34,7 +59,11 @@ function App() {
               <ListItems />
             </Route>
             <Route path="/add">
-              <AddItem />
+              {!userToken ? (
+                <Redirect to="/" />
+              ) : (
+                <AddItem addItem={addItemToList} />
+              )}
             </Route>
             <Route exact path="/">
               {userToken ? (
