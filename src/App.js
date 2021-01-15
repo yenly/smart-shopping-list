@@ -5,6 +5,8 @@ import {
   Route,
   Redirect,
 } from 'react-router-dom';
+import { ThemeProvider } from 'theme-ui';
+import sketchy from 'theme-ui-sketchy-preset';
 import ListItems from './components/ListItems';
 import AddItem from './components/AddItem';
 import Navigation from './components/Navigation';
@@ -46,8 +48,8 @@ function App() {
     }
   };
   return (
-    <>
-      <header>Smart Shopping List App</header>
+    <ThemeProvider theme={sketchy}>
+      <header>Smart Shopping List</header>
       <Router>
         <main>
           <Switch>
@@ -76,7 +78,7 @@ function App() {
         </main>
         <Navigation />
       </Router>
-    </>
+    </ThemeProvider>
   );
 }
 

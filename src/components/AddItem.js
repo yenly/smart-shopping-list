@@ -1,8 +1,12 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useHistory } from 'react-router-dom';
+/** @jsx jsx */
+import { jsx, Box, Label, Input, Radio, Button } from 'theme-ui';
+import Notification from './Notification';
 
 const AddItem = ({ addItem }) => {
   const [itemName, setItemName] = useState('');
+  const [alertMsg, setAlertMsg] = useState('');
   let history = useHistory();
 
   const onChangeItemName = (event) => {
@@ -12,33 +16,56 @@ const AddItem = ({ addItem }) => {
 
   const onSubmit = (event) => {
     event.preventDefault();
-    addItem(event);
-    history.push('/list');
+    if (!event.target.itemName.value) {
+      setAlertMsg({
+        message: 'Please enter item name',
+        msgType: 'danger',
+      });
+      setTimeout(() => {
+        setAlertMsg('');
+      }, 3000);
+    } else {
+      addItem(event);
+      setAlertMsg({
+        message: 'Item added!',
+        msgType: 'info',
+      });
+      setTimeout(() => {
+        history.push('/list');
+      }, 3000);
+    }
   };
   return (
     <div>
-      <h2>Add item view</h2>
-      <form onSubmit={onSubmit}>
-        <label htmlFor="itemName">Name of Item</label> <br />
-        <input
+      {alertMsg && (
+        <Notification message={alertMsg.message} msgType={alertMsg.msgType} />
+      )}
+      <Box as="form" onSubmit={onSubmit}>
+        <Label htmlFor="itemName">Item Name</Label>
+        <Input
+          mb={3}
           id="itemName"
           value={itemName}
           onChange={onChangeItemName}
-        />{' '}
-        <br />
-        <label htmlFor="likelyToPurchase">
+        />
+        <Label htmlFor="likelyToPurchase">
           How soon are you likely to buy again?
-        </label>
-        <br />
-        <select name="likelyToPurchase" id="likelyToPurchase">
-          <option value="">--Please choose likelihood</option>
-          <option value="7">Soon</option>
-          <option value="14">Kind of soon</option>
-          <option value="30">Not soon</option>
-        </select>
-        <br />
-        <button>Add item to list</button>
-      </form>
+        </Label>
+        <fieldset>
+          <Label htmlFor="soon" mb={3}>
+            <Radio name="likelyToPurchase" id="soon" value="7" defaultChecked />{' '}
+            Soon
+          </Label>
+          <Label htmlFor="kind-of-soon" mb={3}>
+            <Radio name="likelyToPurchase" id="kind-of-soon" value="14" /> Kind
+            of Soon
+          </Label>
+          <Label htmlFor="not-soon" mb={3}>
+            <Radio name="likelyToPurchase" id="not-soon" value="30" /> Not Soon
+          </Label>
+        </fieldset>
+        <Button>Add item</Button>
+      </Box>
     </div>
   );
 };

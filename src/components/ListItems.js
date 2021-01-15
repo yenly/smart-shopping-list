@@ -18,7 +18,6 @@ const ListItems = ({ userToken }) => {
   }
   return (
     <div>
-      <h2>List items</h2>
       {error && <strong>Error: {JSON.stringify(error)}</strong>}
       {loading && <span>Loading list...</span>}
       {listItems && (
@@ -28,6 +27,7 @@ const ListItems = ({ userToken }) => {
           ))}
         </ul>
       )}
+      {listItems.length === 0 && <p>Your shopping list is currently empty.</p>}
     </div>
   );
 };
