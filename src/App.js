@@ -31,6 +31,7 @@ function App() {
     setUserToken(newToken);
     window.localStorage.setItem('shoppingListAppUser', newToken);
   };
+
   const addItemToList = (event) => {
     event.preventDefault();
     const itemName = event.target.itemName.value;
@@ -47,6 +48,7 @@ function App() {
         .catch((error) => console.error(`Error adding item: ${error}`));
     }
   };
+
   return (
     <ThemeProvider theme={sketchy}>
       <header>Smart Shopping List</header>

@@ -1,6 +1,7 @@
 import React, { useContext } from 'react';
 import { useCollectionData } from 'react-firebase-hooks/firestore';
 import { FirebaseContext } from './Firebase';
+import PropTypes from 'prop-types';
 
 const ListItems = ({ userToken }) => {
   const firebase = useContext(FirebaseContext);
@@ -30,6 +31,10 @@ const ListItems = ({ userToken }) => {
       {listItems.length === 0 && <p>Your shopping list is currently empty.</p>}
     </div>
   );
+};
+
+ListItems.propTypes = {
+  userToken: PropTypes.string.isRequired,
 };
 
 export default ListItems;
