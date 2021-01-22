@@ -13,7 +13,6 @@ import Navigation from './components/Navigation';
 import Home from './components/Home';
 import getToken from './lib/tokens';
 import { FirebaseContext } from './components/Firebase';
-// import { useCollectionData } from 'react-firebase-hooks/firestore';
 
 function App() {
   const [userToken, setUserToken] = useState('');
