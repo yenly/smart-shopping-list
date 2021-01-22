@@ -31,6 +31,11 @@ nav {
   margin: 0 auto;
 }
 
+main {
+  padding: 1rem;
+  text-align: center;
+}
+
 nav {
   text-align: center;
   padding: 1rem;
