@@ -16,6 +16,7 @@ import { FirebaseContext } from './components/Firebase';
 
 function App() {
   const [userToken, setUserToken] = useState('');
+  const [alertMsg, setAlertMsg] = useState('');
   const firebase = useContext(FirebaseContext);
   const db = firebase.firestore();
 
@@ -49,6 +50,26 @@ function App() {
     }
   };
 
+  const submitListToken = (event) => {
+    event.preventDefault();
+    const listToken = event.target.listToken.value;
+    const list = db.collection(listToken);
+    list.get().then((doc) => {
+      if (!doc.empty) {
+        setUserToken(listToken.trim());
+        window.localStorage.setItem('shoppingListAppUser', listToken);
+      } else {
+        setAlertMsg({
+          message: 'Token does not exist. Please try again or create new list.',
+          msgType: 'danger',
+        });
+        setTimeout(() => {
+          setAlertMsg('');
+        }, 3000);
+      }
+    });
+  };
+
   return (
     <ThemeProvider theme={sketchy}>
       <header>Smart Shopping List</header>
@@ -73,7 +94,11 @@ function App() {
               {userToken ? (
                 <Redirect to="/list" />
               ) : (
-                <Home createUserToken={createUserToken} />
+                <Home
+                  createUserToken={createUserToken}
+                  submitListToken={submitListToken}
+                  alertMsg={alertMsg}
+                />
               )}
             </Route>
           </Switch>
