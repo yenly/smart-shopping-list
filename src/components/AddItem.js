@@ -4,6 +4,7 @@ import { useHistory } from 'react-router-dom';
 import PropTypes from 'prop-types';
 /** @jsx jsx */
 import { jsx, Box, Label, Input, Radio, Button } from 'theme-ui';
+import { useCollectionData } from 'react-firebase-hooks/firestore';
 import { FirebaseContext } from './Firebase';
 
 const RadioOptions = {
@@ -17,6 +18,11 @@ const AddItem = ({ userToken, setAlertMsg }) => {
   const [likelyToPurchase, setLikelyToPurchange] = useState(RadioOptions.soon);
   const firebase = useContext(FirebaseContext);
   const db = firebase.firestore();
+  const [listItems] = useCollectionData(db.collection(userToken), {
+    snapshortListenOptions: {
+      includeMetadataChanges: true,
+    },
+  });
   let history = useHistory();
 
   const onChangeItemName = (event) => {
@@ -25,6 +31,18 @@ const AddItem = ({ userToken, setAlertMsg }) => {
 
   const onChangeLikelyToPurchase = (event) => {
     setLikelyToPurchange(Number(event.target.value));
+  };
+
+  const isDuplicate = (itemName) => {
+    const name = itemName.toLowerCase().replace(/[\W]+/, '');
+    if (listItems.length === 0) {
+      return false;
+    }
+    const parseList = listItems.filter((item) => {
+      const tempName = item.name.toLowerCase().replace(/[^a-zA-Z0-9]/g, '');
+      return tempName.includes(name);
+    });
+    return parseList.length !== 0;
   };
 
   const onSubmit = async (event) => {
@@ -38,10 +56,7 @@ const AddItem = ({ userToken, setAlertMsg }) => {
         purchaseDate: null,
       };
       if (userToken) {
-        const itemRef = db.collection(userToken);
-        const snapshot = await itemRef.where('name', '==', itemName).get();
-
-        if (!snapshot.empty) {
+        if (isDuplicate(itemName)) {
           setAlertMsg({
             message: `${itemName} is already on the list.`,
             msgType: 'danger',

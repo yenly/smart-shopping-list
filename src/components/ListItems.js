@@ -23,7 +23,7 @@ const ListItems = ({ userToken }) => {
     <>
       {error && <strong>Error: {JSON.stringify(error)}</strong>}
       {loading && <span>Loading list...</span>}
-      {listItems && (
+      {listItems && listItems.length !== 0 && (
         <Card
           mb={5}
           mt={10}
