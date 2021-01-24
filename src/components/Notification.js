@@ -1,5 +1,6 @@
 import React from 'react';
 import { Alert } from 'theme-ui';
+import PropTypes from 'prop-types';
 
 const Notification = ({ message, msgType }) => {
   return (
@@ -7,6 +8,11 @@ const Notification = ({ message, msgType }) => {
       {message}
     </Alert>
   );
+};
+
+Notification.propTypes = {
+  message: PropTypes.string.isRequired,
+  msgType: PropTypes.string.isRequired,
 };
 
 export default Notification;

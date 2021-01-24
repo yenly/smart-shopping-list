@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
 import { Button, Label, Input, Box } from 'theme-ui';
 import PropTypes from 'prop-types';
-import Notification from './Notification';
 
-const Home = ({ createUserToken, submitListToken, alertMsg }) => {
+const Home = ({ createUserToken, submitListToken }) => {
   const [listToken, setListToken] = useState('');
 
   const onChangeListToken = (event) => {
@@ -17,10 +16,6 @@ const Home = ({ createUserToken, submitListToken, alertMsg }) => {
 
       <h3>OR</h3>
       <p>Join an existing shopping list by entering a three word token</p>
-
-      {alertMsg && (
-        <Notification message={alertMsg.message} msgType={alertMsg.msgType} />
-      )}
 
       <Box as="form" onSubmit={submitListToken}>
         <Label htmlFor="listToken">Share token</Label>

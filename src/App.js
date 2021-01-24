@@ -13,6 +13,7 @@ import Navigation from './components/Navigation';
 import Home from './components/Home';
 import getToken from './lib/tokens';
 import { FirebaseContext } from './components/Firebase';
+import Notification from './components/Notification';
 
 function App() {
   const [userToken, setUserToken] = useState('');
@@ -31,23 +32,6 @@ function App() {
     const newToken = getToken();
     setUserToken(newToken);
     window.localStorage.setItem('shoppingListAppUser', newToken);
-  };
-
-  const addItemToList = (event) => {
-    event.preventDefault();
-    const itemName = event.target.itemName.value;
-    const likelyToPurchase = Number(event.target.likelyToPurchase.value);
-    const newItem = {
-      name: itemName.trim(),
-      likelyToPurchase: likelyToPurchase,
-      purchaseDate: null,
-    };
-    if (userToken) {
-      db.collection(userToken)
-        .add(newItem)
-        .then((docRef) => console.log(`New item added: ${docRef.id}`))
-        .catch((error) => console.error(`Error adding item: ${error}`));
-    }
   };
 
   const submitListToken = (event) => {
@@ -75,6 +59,12 @@ function App() {
       <header>Smart Shopping List</header>
       <Router>
         <main>
+          {alertMsg && (
+            <Notification
+              message={alertMsg.message}
+              msgType={alertMsg.msgType}
+            />
+          )}
           <Switch>
             <Route path="/list">
               {userToken ? (
@@ -87,7 +77,7 @@ function App() {
               {!userToken ? (
                 <Redirect to="/" />
               ) : (
-                <AddItem addItem={addItemToList} />
+                <AddItem userToken={userToken} setAlertMsg={setAlertMsg} />
               )}
             </Route>
             <Route exact path="/">
@@ -97,7 +87,6 @@ function App() {
                 <Home
                   createUserToken={createUserToken}
                   submitListToken={submitListToken}
-                  alertMsg={alertMsg}
                 />
               )}
             </Route>
