@@ -34,7 +34,7 @@ const AddItem = ({ userToken, setAlertMsg }) => {
   };
 
   const isDuplicate = (itemName) => {
-    const regexPattern = /[\W]+/; // another pattern /[^a-zA-Z0-9]/g
+    const regexPattern = /[\W\d_]*/g;
 
     const name = itemName.toLowerCase().replace(regexPattern, '');
     if (listItems.length === 0) {
@@ -42,7 +42,8 @@ const AddItem = ({ userToken, setAlertMsg }) => {
     }
     const parseList = listItems.filter((item) => {
       const tempName = item.name.toLowerCase().replace(regexPattern, '');
-      return tempName.match(name);
+      console.log({ tempName, name });
+      return tempName === name; //tempName.match(name);
     });
     return parseList.length !== 0;
   };
