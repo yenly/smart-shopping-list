@@ -1,4 +1,5 @@
-import { useContext, Fragment } from 'react';
+// eslint-disable-next-line no-unused-vars
+import React, { useContext, Fragment } from 'react';
 import { useCollectionData } from 'react-firebase-hooks/firestore';
 import { FirebaseContext } from './Firebase';
 import PropTypes from 'prop-types';

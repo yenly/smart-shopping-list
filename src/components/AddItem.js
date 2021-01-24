@@ -1,4 +1,5 @@
-import { Fragment } from 'react';
+// eslint-disable-next-line no-unused-vars
+import React, { Fragment } from 'react';
 import { useState, useContext } from 'react';
 import { useHistory } from 'react-router-dom';
 import PropTypes from 'prop-types';
