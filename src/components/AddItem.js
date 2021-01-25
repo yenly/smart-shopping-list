@@ -1,4 +1,5 @@
-import { Fragment } from 'react';
+// eslint-disable-next-line no-unused-vars
+import React, { Fragment } from 'react';
 import { useState, useContext } from 'react';
 import { useHistory } from 'react-router-dom';
 import PropTypes from 'prop-types';
@@ -34,13 +35,16 @@ const AddItem = ({ userToken, setAlertMsg }) => {
   };
 
   const isDuplicate = (itemName) => {
-    const name = itemName.toLowerCase().replace(/[\W]+/, '');
+    const regexPattern = /[\W\d_]*/g;
+
+    const name = itemName.toLowerCase().replace(regexPattern, '');
     if (listItems.length === 0) {
       return false;
     }
     const parseList = listItems.filter((item) => {
-      const tempName = item.name.toLowerCase().replace(/[^a-zA-Z0-9]/g, '');
-      return tempName.includes(name);
+      const tempName = item.name.toLowerCase().replace(regexPattern, '');
+      console.log({ tempName, name });
+      return tempName === name; //tempName.match(name);
     });
     return parseList.length !== 0;
   };
@@ -72,7 +76,7 @@ const AddItem = ({ userToken, setAlertMsg }) => {
             .catch((error) => console.error(`Error adding item: ${error}`));
           setAlertMsg({
             message: 'Item added!',
-            msgType: 'info',
+            msgType: 'success',
           });
           setItemName('');
           setLikelyToPurchange(7);

@@ -1,9 +1,11 @@
-import React, { useContext } from 'react';
+// eslint-disable-next-line no-unused-vars
+import React, { useContext, Fragment } from 'react';
 import { useCollectionData } from 'react-firebase-hooks/firestore';
 import { FirebaseContext } from './Firebase';
 import PropTypes from 'prop-types';
 /** @jsx jsx */
-import { jsx, Card } from 'theme-ui';
+import { jsx, Card, Button } from 'theme-ui';
+import { useHistory } from 'react-router-dom';
 
 const ListItems = ({ userToken }) => {
   const firebase = useContext(FirebaseContext);
@@ -16,17 +18,22 @@ const ListItems = ({ userToken }) => {
       },
     },
   );
+  let history = useHistory();
+
   if (!listItems) {
     return null;
   }
+
+  const handleOnClick = () => {
+    history.push('/add');
+  };
+
   return (
-    <>
+    <Fragment>
       {error && <strong>Error: {JSON.stringify(error)}</strong>}
       {loading && <span>Loading list...</span>}
       {listItems && listItems.length !== 0 && (
         <Card
-          mb={5}
-          mt={10}
           sx={{
             maxWidth: 600,
             padding: '20px',
@@ -44,8 +51,13 @@ const ListItems = ({ userToken }) => {
           </ul>
         </Card>
       )}
-      {listItems.length === 0 && <p>Your shopping list is currently empty.</p>}
-    </>
+      {listItems.length === 0 && (
+        <>
+          <p>Your shopping list is currently empty.</p>
+          <Button onClick={handleOnClick}>Add item</Button>
+        </>
+      )}
+    </Fragment>
   );
 };
 

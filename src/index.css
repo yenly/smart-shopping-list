@@ -37,8 +37,12 @@ main {
 }
 
 nav {
+  position: -webkit-sticky;
+  position: sticky;
+  bottom: 0.5rem;
   text-align: center;
   padding: 1rem;
+  width: 90%;
 }
 
 nav a {
