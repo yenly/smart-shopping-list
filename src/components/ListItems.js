@@ -4,8 +4,9 @@ import { useCollectionData } from 'react-firebase-hooks/firestore';
 import { FirebaseContext } from './Firebase';
 import PropTypes from 'prop-types';
 /** @jsx jsx */
-import { jsx, Card, Button } from 'theme-ui';
+import { jsx, Card, Button, Label, Checkbox } from 'theme-ui';
 import { useHistory } from 'react-router-dom';
+import dayjs from 'dayjs';
 
 const ListItems = ({ userToken }) => {
   const firebase = useContext(FirebaseContext);
@@ -16,6 +17,7 @@ const ListItems = ({ userToken }) => {
       snapshortListenOptions: {
         includeMetadataChanges: true,
       },
+      idField: 'id',
     },
   );
   let history = useHistory();
@@ -26,6 +28,30 @@ const ListItems = ({ userToken }) => {
 
   const handleOnClick = () => {
     history.push('/add');
+  };
+
+  const markPurchased = (event) => {
+    const itemPurchased = event.target.name;
+    const findDoc = db.collection(userToken).where('name', '==', itemPurchased);
+    findDoc
+      .get()
+      .then((querySnapshot) => {
+        querySnapshot.forEach((doc) => {
+          const now = dayjs();
+          const itemDocRef = db.collection(userToken).doc(doc.id);
+          itemDocRef.update({
+            purchaseDate: now.valueOf(),
+          });
+        });
+      })
+      .catch((error) => console.error(error));
+  };
+
+  const isWithinADay = (pDate) => {
+    const purchaseDate = dayjs(pDate);
+    const today = dayjs();
+    const cDate = purchaseDate.add(24, 'hour');
+    return cDate.isAfter(today);
   };
 
   return (
@@ -45,9 +71,37 @@ const ListItems = ({ userToken }) => {
           }}
         >
           <ul>
-            {listItems.map((item) => (
-              <li key={item.name}>{item.name}</li>
-            ))}
+            {listItems.map((item) => {
+              if (isWithinADay(item.purchaseDate)) {
+                return (
+                  <li key={item.name}>
+                    <Label htmlFor={item.name} mb={2}>
+                      <Checkbox
+                        id={item.name}
+                        name={item.name}
+                        checked
+                        readOnly
+                      />
+                      {item.name}
+                    </Label>
+                  </li>
+                );
+              } else {
+                return (
+                  <li key={item.name}>
+                    <Label htmlFor={item.name} mb={2}>
+                      <Checkbox
+                        id={item.name}
+                        name={item.name}
+                        onClick={markPurchased}
+                        onChange={markPurchased}
+                      />
+                      {item.name}
+                    </Label>
+                  </li>
+                );
+              }
+            })}
           </ul>
         </Card>
       )}
