@@ -43,7 +43,6 @@ const AddItem = ({ userToken, setAlertMsg }) => {
     }
     const parseList = listItems.filter((item) => {
       const tempName = item.name.toLowerCase().replace(regexPattern, '');
-      console.log({ tempName, name });
       return tempName === name; //tempName.match(name);
     });
     return parseList.length !== 0;
