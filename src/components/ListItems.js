@@ -58,6 +58,13 @@ const ListItems = ({ userToken }) => {
     <Fragment>
       {error && <strong>Error: {JSON.stringify(error)}</strong>}
       {loading && <span>Loading list...</span>}
+      {userToken && (
+        <p>
+          Share your list with this token:
+          <br />
+          <strong>{userToken}</strong>
+        </p>
+      )}
       {listItems && listItems.length !== 0 && (
         <Card
           sx={{
