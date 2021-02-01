@@ -30,6 +30,12 @@ function App() {
 
   const createUserToken = () => {
     const newToken = getToken();
+    db.collection('listTokens')
+      .add({
+        token: newToken,
+      })
+      .then((docRef) => console.log(`New token added: ${docRef.id}`))
+      .catch((error) => console.error(`Error adding token: ${error}`));
     setUserToken(newToken);
     window.localStorage.setItem('shoppingListAppUser', newToken);
   };
@@ -37,7 +43,7 @@ function App() {
   const submitListToken = (event) => {
     event.preventDefault();
     const listToken = event.target.listToken.value;
-    const list = db.collection(listToken);
+    const list = db.collection('listTokens').where('token', '==', listToken);
     list.get().then((doc) => {
       if (!doc.empty) {
         setUserToken(listToken.trim());
