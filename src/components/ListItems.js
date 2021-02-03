@@ -1,14 +1,24 @@
 // eslint-disable-next-line no-unused-vars
-import React, { useContext, Fragment } from 'react';
+import React, { useContext, Fragment, useState } from 'react';
 import { useCollectionData } from 'react-firebase-hooks/firestore';
 import { FirebaseContext } from './Firebase';
 import PropTypes from 'prop-types';
 /** @jsx jsx */
-import { jsx, Card, Button, Label, Checkbox } from 'theme-ui';
+import {
+  jsx,
+  Card,
+  Button,
+  Label,
+  Checkbox,
+  Input,
+  IconButton,
+} from 'theme-ui';
 import { useHistory } from 'react-router-dom';
 import dayjs from 'dayjs';
 
 const ListItems = ({ userToken }) => {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [displayClearIcon, setDisplayClearIcon] = useState(false);
   const firebase = useContext(FirebaseContext);
   const db = firebase.firestore();
   const [listItems, loading, error] = useCollectionData(
@@ -54,6 +64,21 @@ const ListItems = ({ userToken }) => {
     return cDate.isAfter(today);
   };
 
+  const handleSearchTermOnChange = (event) => {
+    const term = event.target.value;
+    if (term.length !== 0) {
+      setDisplayClearIcon(true);
+    } else {
+      setDisplayClearIcon(false);
+    }
+    setSearchTerm(term);
+  };
+
+  const clearSearchTermInput = () => {
+    setSearchTerm('');
+    setDisplayClearIcon(false);
+  };
+
   return (
     <Fragment>
       {error && <strong>Error: {JSON.stringify(error)}</strong>}
@@ -65,6 +90,24 @@ const ListItems = ({ userToken }) => {
           <strong>{userToken}</strong>
         </p>
       )}
+      <Label htmlFor="searchTerm">Filter items</Label>
+      <div className="searchTermInput">
+        <Input
+          mb={3}
+          name="searchTerm"
+          value={searchTerm}
+          onChange={handleSearchTermOnChange}
+        />
+        {displayClearIcon && (
+          <IconButton
+            aria-label="Clear Filter Term"
+            onClick={clearSearchTermInput}
+          >
+            X
+          </IconButton>
+        )}
+      </div>
+
       {listItems && listItems.length !== 0 && (
         <Card
           sx={{
@@ -78,37 +121,39 @@ const ListItems = ({ userToken }) => {
           }}
         >
           <ul>
-            {listItems.map((item) => {
-              if (isWithinADay(item.purchaseDate)) {
-                return (
-                  <li key={item.name}>
-                    <Label htmlFor={item.name} mb={2}>
-                      <Checkbox
-                        id={item.name}
-                        name={item.name}
-                        checked
-                        readOnly
-                      />
-                      {item.name}
-                    </Label>
-                  </li>
-                );
-              } else {
-                return (
-                  <li key={item.name}>
-                    <Label htmlFor={item.name} mb={2}>
-                      <Checkbox
-                        id={item.name}
-                        name={item.name}
-                        onClick={markPurchased}
-                        onChange={markPurchased}
-                      />
-                      {item.name}
-                    </Label>
-                  </li>
-                );
-              }
-            })}
+            {listItems
+              .filter((item) => item.name.includes(searchTerm))
+              .map((item) => {
+                if (isWithinADay(item.purchaseDate)) {
+                  return (
+                    <li key={item.name}>
+                      <Label htmlFor={item.name} mb={2}>
+                        <Checkbox
+                          id={item.name}
+                          name={item.name}
+                          checked
+                          readOnly
+                        />
+                        {item.name}
+                      </Label>
+                    </li>
+                  );
+                } else {
+                  return (
+                    <li key={item.name}>
+                      <Label htmlFor={item.name} mb={2}>
+                        <Checkbox
+                          id={item.name}
+                          name={item.name}
+                          onClick={markPurchased}
+                          onChange={markPurchased}
+                        />
+                        {item.name}
+                      </Label>
+                    </li>
+                  );
+                }
+              })}
           </ul>
         </Card>
       )}
