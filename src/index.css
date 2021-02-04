@@ -62,3 +62,15 @@ ul {
 .active {
   font-weight: bold;
 }
+
+.searchTermInput {
+  position: relative;
+}
+
+.searchTermInput button {
+  position: absolute;
+  top: 0.5rem;
+  right: 0;
+  color: red;
+  font-weight: bold;
+}
