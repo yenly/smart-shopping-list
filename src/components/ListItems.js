@@ -90,72 +90,74 @@ const ListItems = ({ userToken }) => {
           <strong>{userToken}</strong>
         </p>
       )}
-      <Label htmlFor="searchTerm">Filter items</Label>
-      <div className="searchTermInput">
-        <Input
-          mb={3}
-          name="searchTerm"
-          value={searchTerm}
-          onChange={handleSearchTermOnChange}
-        />
-        {displayClearIcon && (
-          <IconButton
-            aria-label="Clear Filter Term"
-            onClick={clearSearchTermInput}
-          >
-            X
-          </IconButton>
-        )}
-      </div>
 
       {listItems && listItems.length !== 0 && (
-        <Card
-          sx={{
-            maxWidth: 600,
-            padding: '20px',
-            border: 'thin',
-            borderColor: 'yellowDark',
-            borderRadius: 'sketchy5',
-            textAlign: 'left',
-            background: (theme) => theme.colors.yellow,
-          }}
-        >
-          <ul>
-            {listItems
-              .filter((item) => item.name.includes(searchTerm))
-              .map((item) => {
-                if (isWithinADay(item.purchaseDate)) {
-                  return (
-                    <li key={item.name}>
-                      <Label htmlFor={item.name} mb={2}>
-                        <Checkbox
-                          id={item.name}
-                          name={item.name}
-                          checked
-                          readOnly
-                        />
-                        {item.name}
-                      </Label>
-                    </li>
-                  );
-                } else {
-                  return (
-                    <li key={item.name}>
-                      <Label htmlFor={item.name} mb={2}>
-                        <Checkbox
-                          id={item.name}
-                          name={item.name}
-                          onClick={markPurchased}
-                          onChange={markPurchased}
-                        />
-                        {item.name}
-                      </Label>
-                    </li>
-                  );
-                }
-              })}
-          </ul>
-        </Card>
+        <>
+          <Label htmlFor="searchTerm">Filter items</Label>
+          <div className="searchTermInput">
+            <Input
+              mb={3}
+              name="searchTerm"
+              value={searchTerm}
+              onChange={handleSearchTermOnChange}
+            />
+            {displayClearIcon && (
+              <IconButton
+                aria-label="Clear Filter Term"
+                onClick={clearSearchTermInput}
+              >
+                X
+              </IconButton>
+            )}
+          </div>
+          <Card
+            sx={{
+              maxWidth: 600,
+              padding: '20px',
+              border: 'thin',
+              borderColor: 'yellowDark',
+              borderRadius: 'sketchy5',
+              textAlign: 'left',
+              background: (theme) => theme.colors.yellow,
+            }}
+          >
+            <ul>
+              {listItems
+                .filter((item) => item.name.includes(searchTerm))
+                .map((item) => {
+                  if (isWithinADay(item.purchaseDate)) {
+                    return (
+                      <li key={item.name}>
+                        <Label htmlFor={item.name} mb={2}>
+                          <Checkbox
+                            id={item.name}
+                            name={item.name}
+                            checked
+                            readOnly
+                          />
+                          {item.name}
+                        </Label>
+                      </li>
+                    );
+                  } else {
+                    return (
+                      <li key={item.name}>
+                        <Label htmlFor={item.name} mb={2}>
+                          <Checkbox
+                            id={item.name}
+                            name={item.name}
+                            onClick={markPurchased}
+                            onChange={markPurchased}
+                          />
+                          {item.name}
+                        </Label>
+                      </li>
+                    );
+                  }
+                })}
+            </ul>
+          </Card>
+        </>
       )}
       {listItems.length === 0 && (
         <>
