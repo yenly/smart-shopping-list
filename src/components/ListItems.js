@@ -48,16 +48,23 @@ const ListItems = ({ userToken }) => {
       .then((querySnapshot) => {
         querySnapshot.forEach((doc) => {
           const now = dayjs();
+          let item = doc.data();
+          let purchaseDates = item.purchaseDates;
+          purchaseDates =
+            purchaseDates.length === 0
+              ? (purchaseDates = [now.valueOf()])
+              : [now.valueOf(), ...purchaseDates];
           const itemDocRef = db.collection(userToken).doc(doc.id);
-          itemDocRef.update({
-            purchaseDate: now.valueOf(),
-          });
+          itemDocRef.update({ purchaseDates: purchaseDates });
         });
       })
       .catch((error) => console.error(error));
   };
 
   const isWithinADay = (pDate) => {
+    if (pDate === undefined) {
+      return false;
+    }
     const purchaseDate = dayjs(pDate);
     const today = dayjs();
     const cDate = purchaseDate.add(24, 'hour');
@@ -125,7 +132,8 @@ const ListItems = ({ userToken }) => {
               {listItems
                 .filter((item) => item.name.includes(searchTerm))
                 .map((item) => {
-                  if (isWithinADay(item.purchaseDate)) {
+                  // console.log(item.name, isWithinADay(item.purchaseDates.pop()))
+                  if (isWithinADay(item.purchaseDates.pop())) {
                     return (
                       <li key={item.name}>
                         <Label htmlFor={item.name} mb={2}>
