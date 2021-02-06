@@ -54,22 +54,21 @@ const ListItems = ({ userToken }) => {
           const now = dayjs();
           let item = doc.data();
           let purchaseDates = item.purchaseDates;
-          const lastPurchaseDate = dayjs(
-            Number(item.purchaseDates[item.purchaseDates.length - 1]),
-          );
+          let latestInterval = '';
+          if (item.purchaseDates.length > 2) {
+            latestInterval = calculateLastInterval(item.purchaseDates);
+          } else {
+            latestInterval = item.likelyToPurchase;
+          }
           purchaseDates =
             purchaseDates.length === 0
               ? (purchaseDates = [now.valueOf()])
               : [...purchaseDates, now.valueOf()];
 
-          // calculate estimated number of days until the next purchase date
-          // need: lastEstimate, latestInterval, numberOfPurchases
           const lastEstimate = !isNaN(item.lastEstimate)
             ? item.lastEstimate
             : null;
           const numberOfPurchases = purchaseDates.length;
-          const duration = dayjs.duration(now.diff(lastPurchaseDate));
-          const latestInterval = Math.round(duration.asDays());
           const newEstimate = calculateEstimate(
             lastEstimate,
             latestInterval,
@@ -83,6 +82,13 @@ const ListItems = ({ userToken }) => {
         });
       })
       .catch((error) => console.error(error));
+  };
+
+  const calculateLastInterval = (purchases) => {
+    const mostRecent = dayjs(purchases[purchases.length - 1]);
+    const secondToLast = dayjs(purchases[purchases.length - 2]);
+    const duration = dayjs.duration(mostRecent.diff(secondToLast));
+    return Math.round(duration.asDays());
   };
 
   const isWithinADay = (pDate) => {
