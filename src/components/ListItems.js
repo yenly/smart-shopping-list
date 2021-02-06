@@ -54,12 +54,14 @@ const ListItems = ({ userToken }) => {
           const now = dayjs();
           let item = doc.data();
           let purchaseDates = item.purchaseDates;
-          let latestInterval = '';
-          if (item.purchaseDates.length > 2) {
-            latestInterval = calculateLastInterval(item.purchaseDates);
-          } else {
-            latestInterval = item.likelyToPurchase;
-          }
+          const latestInterval =
+            item.purchaseDates.length >= 1
+              ? calculateLastInterval(
+                  purchaseDates[purchaseDates.length - 1],
+                  now.valueOf(),
+                )
+              : item.likelyToPurchase;
+
           purchaseDates =
             purchaseDates.length === 0
               ? (purchaseDates = [now.valueOf()])
@@ -74,6 +76,7 @@ const ListItems = ({ userToken }) => {
             latestInterval,
             numberOfPurchases,
           );
+
           const itemDocRef = db.collection(userToken).doc(doc.id);
           itemDocRef.update({
             purchaseDates: purchaseDates,
@@ -84,10 +87,10 @@ const ListItems = ({ userToken }) => {
       .catch((error) => console.error(error));
   };
 
-  const calculateLastInterval = (purchases) => {
-    const mostRecent = dayjs(purchases[purchases.length - 1]);
-    const secondToLast = dayjs(purchases[purchases.length - 2]);
-    const duration = dayjs.duration(mostRecent.diff(secondToLast));
+  const calculateLastInterval = (lastPurchase, today) => {
+    const mostRecent = dayjs(lastPurchase);
+    const todayPurchase = dayjs(today);
+    const duration = dayjs.duration(todayPurchase.diff(mostRecent));
     return Math.round(duration.asDays());
   };
 
@@ -163,36 +166,51 @@ const ListItems = ({ userToken }) => {
                 .filter((item) => item.name.includes(searchTerm))
                 .map((item) => {
                   // console.log(item.name, isWithinADay(item.purchaseDates.pop()))
-                  if (isWithinADay(item.purchaseDates.pop())) {
-                    return (
-                      <li key={item.name}>
-                        <Label htmlFor={item.name} mb={2}>
-                          <Checkbox
-                            id={item.name}
-                            name={item.name}
-                            onChange={markPurchased}
-                            checked
-                            readOnly
-                          />
-                          {item.name}
-                        </Label>
-                      </li>
-                    );
-                  } else {
-                    return (
-                      <li key={item.name}>
-                        <Label htmlFor={item.name} mb={2}>
-                          <Checkbox
-                            id={item.name}
-                            name={item.name}
-                            onClick={markPurchased}
-                            onChange={markPurchased}
-                          />
-                          {item.name}
-                        </Label>
-                      </li>
-                    );
-                  }
+                  // if (isWithinADay(item.purchaseDates.pop())) {
+                  //   return (
+                  //     <li key={item.name}>
+                  //       <Label htmlFor={item.name} mb={2}>
+                  //         <Checkbox
+                  //           id={item.name}
+                  //           name={item.name}
+                  //           onChange={markPurchased}
+                  //           checked={true}
+                  //           readOnly
+                  //         />
+                  //         {item.name}
+                  //       </Label>
+                  //     </li>
+                  //   );
+                  // } else {
+                  //   return (
+                  //     <li key={item.name}>
+                  //       <Label htmlFor={item.name} mb={2}>
+                  //         <Checkbox
+                  //           id={item.name}
+                  //           name={item.name}
+                  //           onClick={markPurchased}
+                  //           onChange={markPurchased}
+                  //         />
+                  //         {item.name}
+                  //       </Label>
+                  //     </li>
+                  //   );
+                  // }
+                  return (
+                    <li key={item.name}>
+                      <Label htmlFor={item.name} mb={2}>
+                        <Checkbox
+                          id={item.name}
+                          name={item.name}
+                          onClick={markPurchased}
+                          onChange={markPurchased}
+                          checked={isWithinADay(item.purchaseDates.pop())}
+                          readOnly={isWithinADay(item.purchaseDates.pop())}
+                        />
+                        {item.name}
+                      </Label>
+                    </li>
+                  );
                 })}
             </ul>
           </Card>
