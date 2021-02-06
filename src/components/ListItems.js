@@ -15,6 +15,10 @@ import {
 } from 'theme-ui';
 import { useHistory } from 'react-router-dom';
 import dayjs from 'dayjs';
+import duration from 'dayjs/plugin/duration';
+import calculateEstimate from '../lib/estimates';
+
+dayjs.extend(duration);
 
 const ListItems = ({ userToken }) => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -50,12 +54,32 @@ const ListItems = ({ userToken }) => {
           const now = dayjs();
           let item = doc.data();
           let purchaseDates = item.purchaseDates;
+          const lastPurchaseDate = dayjs(
+            Number(item.purchaseDates[item.purchaseDates.length - 1]),
+          );
           purchaseDates =
             purchaseDates.length === 0
               ? (purchaseDates = [now.valueOf()])
-              : [now.valueOf(), ...purchaseDates];
+              : [...purchaseDates, now.valueOf()];
+
+          // calculate estimated number of days until the next purchase date
+          // need: lastEstimate, latestInterval, numberOfPurchases
+          const lastEstimate = !isNaN(item.lastEstimate)
+            ? item.lastEstimate
+            : null;
+          const numberOfPurchases = purchaseDates.length;
+          const duration = dayjs.duration(now.diff(lastPurchaseDate));
+          const latestInterval = Math.round(duration.asDays());
+          const newEstimate = calculateEstimate(
+            lastEstimate,
+            latestInterval,
+            numberOfPurchases,
+          );
           const itemDocRef = db.collection(userToken).doc(doc.id);
-          itemDocRef.update({ purchaseDates: purchaseDates });
+          itemDocRef.update({
+            purchaseDates: purchaseDates,
+            estimatedDays: newEstimate,
+          });
         });
       })
       .catch((error) => console.error(error));
@@ -140,6 +164,7 @@ const ListItems = ({ userToken }) => {
                           <Checkbox
                             id={item.name}
                             name={item.name}
+                            onChange={markPurchased}
                             checked
                             readOnly
                           />
