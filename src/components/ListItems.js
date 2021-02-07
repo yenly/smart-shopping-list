@@ -15,10 +15,12 @@ import {
 } from 'theme-ui';
 import { useHistory } from 'react-router-dom';
 import dayjs from 'dayjs';
-import duration from 'dayjs/plugin/duration';
 import calculateEstimate from '../lib/estimates';
-
-dayjs.extend(duration);
+import {
+  calculateDateDuration,
+  isWithinADay,
+  isWithinMinutes,
+} from '../lib/dateDurations';
 
 const ListItems = ({ userToken }) => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -54,68 +56,70 @@ const ListItems = ({ userToken }) => {
           const now = dayjs();
           let item = doc.data();
           let purchaseDates = item.purchaseDates;
-          // if(purchaseDates && isWithinFiveMinutes(purchaseDates[purchaseDates.length - 1])) {
+          // if(purchaseDates && isWithinMinutes(purchaseDates[purchaseDates.length - 1])) {
           // undo checked box and revert data by
           //   remove last purchase date
           //   change estimatedDays = lastEstimate, lastEstimate = null
           // } else do calculate estimate and save purchase date
-          const latestInterval =
-            item.purchaseDates.length >= 1
-              ? calculateLastInterval(
-                  purchaseDates[purchaseDates.length - 1],
-                  now.valueOf(),
-                )
-              : item.likelyToPurchase;
+          if (
+            purchaseDates.length !== 0 &&
+            isWithinMinutes(purchaseDates[purchaseDates.length - 1])
+          ) {
+            const newPurchaseDates = purchaseDates.slice(
+              0,
+              purchaseDates.length - 1,
+            );
+            const newEstimatedDays =
+              item.lastEstimates.length !== 0 ? item.lastEstimates.pop() : null;
+            const newLastEstimates = item.lastEstimates || [];
+            const itemDocRef = db.collection(userToken).doc(doc.id);
+            itemDocRef.update({
+              purchaseDates: newPurchaseDates,
+              lastEstimates: newLastEstimates,
+              estimatedDays: newEstimatedDays,
+            });
+          } else {
+            const latestInterval =
+              item.purchaseDates.length >= 1
+                ? calculateLastInterval(purchaseDates[purchaseDates.length - 1])
+                : item.likelyToPurchase;
 
-          purchaseDates =
-            purchaseDates.length === 0
-              ? (purchaseDates = [now.valueOf()])
-              : [...purchaseDates, now.valueOf()];
+            purchaseDates =
+              purchaseDates.length === 0
+                ? (purchaseDates = [now.valueOf()])
+                : [...purchaseDates, now.valueOf()];
 
-          const lastEstimate = item.estimatedDays || null;
+            const lastEstimate = item.estimatedDays || null;
 
-          const numberOfPurchases = purchaseDates.length;
-          const newEstimate = calculateEstimate(
-            lastEstimate,
-            latestInterval,
-            numberOfPurchases,
-          );
-          const itemDocRef = db.collection(userToken).doc(doc.id);
-          itemDocRef.update({
-            purchaseDates: purchaseDates,
-            lastEstimate: lastEstimate,
-            estimatedDays: newEstimate,
-          });
+            const numberOfPurchases = purchaseDates.length;
+            const newEstimate = calculateEstimate(
+              lastEstimate,
+              latestInterval,
+              numberOfPurchases,
+            );
+            // save to lastEstimate to list of lastEstimates for reverting
+            const lastEstimates =
+              item.lastEstimates && item.lastEstimates.length !== 0
+                ? [...item.lastEstimates, lastEstimate]
+                : lastEstimate !== null
+                ? [lastEstimate]
+                : [];
+            const itemDocRef = db.collection(userToken).doc(doc.id);
+            itemDocRef.update({
+              purchaseDates: purchaseDates,
+              lastEstimates: lastEstimates,
+              estimatedDays: newEstimate,
+            });
+          }
         });
       })
       .catch((error) => console.error(error));
   };
 
-  const calculateLastInterval = (lastPurchase, today) => {
+  const calculateLastInterval = (lastPurchase) => {
     const mostRecent = dayjs(lastPurchase);
-    const todayPurchase = dayjs(today);
-    const duration = dayjs.duration(todayPurchase.diff(mostRecent));
+    const duration = calculateDateDuration(mostRecent);
     return Math.round(duration.asDays());
-  };
-
-  const dateDuration = (pDate) => {
-    if (pDate === undefined) {
-      return false;
-    }
-    const purchaseDate = dayjs(pDate);
-    const today = dayjs();
-    const duration = dayjs.duration(today.diff(purchaseDate));
-    return Math.round(duration.asMinutes());
-  };
-
-  const isWithinADay = (pDate) => {
-    const duration = dateDuration(pDate);
-    return duration < 60;
-  };
-
-  const isWithinFiveMinutes = (pDate) => {
-    const duration = dateDuration(pDate);
-    return duration <= 5;
   };
 
   const handleSearchTermOnChange = (event) => {
@@ -131,6 +135,18 @@ const ListItems = ({ userToken }) => {
   const clearSearchTermInput = () => {
     setSearchTerm('');
     setDisplayClearIcon(false);
+  };
+
+  const isChecked = (pDates) => {
+    return pDates.length !== 0 && isWithinADay(pDates[pDates.length - 1]);
+  };
+
+  const isDisabled = (pDates) => {
+    return (
+      pDates.length !== 0 &&
+      isWithinADay(pDates[pDates.length - 1]) &&
+      !isWithinMinutes(pDates[pDates.length - 1])
+    );
   };
 
   return (
@@ -187,18 +203,8 @@ const ListItems = ({ userToken }) => {
                           name={item.name}
                           onClick={markPurchased}
                           onChange={markPurchased}
-                          checked={
-                            item.purchaseDates &&
-                            item.purchaseDates.length !== 0
-                              ? isWithinADay(item.purchaseDates.pop())
-                              : false
-                          }
-                          disabled={
-                            item.purchaseDates &&
-                            item.purchaseDates.length !== 0
-                              ? isWithinFiveMinutes(item.purchaseDates.pop())
-                              : false
-                          }
+                          checked={isChecked(item.purchaseDates)}
+                          disabled={isDisabled(item.purchaseDates)}
                         />
                         {item.name}
                       </Label>
