@@ -1,5 +1,5 @@
 // eslint-disable-next-line no-unused-vars
-import React, { useContext, Fragment, useState, isValidElement } from 'react';
+import React, { useContext, Fragment, useState } from 'react';
 import { useCollectionData } from 'react-firebase-hooks/firestore';
 import { FirebaseContext } from './Firebase';
 import PropTypes from 'prop-types';
@@ -58,7 +58,7 @@ const ListItems = ({ userToken }) => {
           // undo checked box and revert data by
           //   remove last purchase date
           //   change estimatedDays = lastEstimate, lastEstimate = null
-          // }
+          // } else do calculate estimate and save purchase date
           const latestInterval =
             item.purchaseDates.length >= 1
               ? calculateLastInterval(
