@@ -1,5 +1,5 @@
 // eslint-disable-next-line no-unused-vars
-import React, { useContext, Fragment, useState } from 'react';
+import React, { useContext, Fragment, useState, isValidElement } from 'react';
 import { useCollectionData } from 'react-firebase-hooks/firestore';
 import { FirebaseContext } from './Firebase';
 import PropTypes from 'prop-types';
@@ -54,6 +54,11 @@ const ListItems = ({ userToken }) => {
           const now = dayjs();
           let item = doc.data();
           let purchaseDates = item.purchaseDates;
+          // if(purchaseDates && isWithinFiveMinutes(purchaseDates[purchaseDates.length - 1])) {
+          // undo checked box and revert data by
+          //   remove last purchase date
+          //   change estimatedDays = lastEstimate, lastEstimate = null
+          // }
           const latestInterval =
             item.purchaseDates.length >= 1
               ? calculateLastInterval(
@@ -67,19 +72,18 @@ const ListItems = ({ userToken }) => {
               ? (purchaseDates = [now.valueOf()])
               : [...purchaseDates, now.valueOf()];
 
-          const lastEstimate = !isNaN(item.lastEstimate)
-            ? item.lastEstimate
-            : null;
+          const lastEstimate = item.estimatedDays || null;
+
           const numberOfPurchases = purchaseDates.length;
           const newEstimate = calculateEstimate(
             lastEstimate,
             latestInterval,
             numberOfPurchases,
           );
-
           const itemDocRef = db.collection(userToken).doc(doc.id);
           itemDocRef.update({
             purchaseDates: purchaseDates,
+            lastEstimate: lastEstimate,
             estimatedDays: newEstimate,
           });
         });
@@ -94,14 +98,24 @@ const ListItems = ({ userToken }) => {
     return Math.round(duration.asDays());
   };
 
-  const isWithinADay = (pDate) => {
+  const dateDuration = (pDate) => {
     if (pDate === undefined) {
       return false;
     }
     const purchaseDate = dayjs(pDate);
     const today = dayjs();
-    const cDate = purchaseDate.add(24, 'hour');
-    return cDate.isAfter(today);
+    const duration = dayjs.duration(today.diff(purchaseDate));
+    return Math.round(duration.asMinutes());
+  };
+
+  const isWithinADay = (pDate) => {
+    const duration = dateDuration(pDate);
+    return duration < 60;
+  };
+
+  const isWithinFiveMinutes = (pDate) => {
+    const duration = dateDuration(pDate);
+    return duration <= 5;
   };
 
   const handleSearchTermOnChange = (event) => {
@@ -165,37 +179,6 @@ const ListItems = ({ userToken }) => {
               {listItems
                 .filter((item) => item.name.includes(searchTerm))
                 .map((item) => {
-                  // console.log(item.name, isWithinADay(item.purchaseDates.pop()))
-                  // if (isWithinADay(item.purchaseDates.pop())) {
-                  //   return (
-                  //     <li key={item.name}>
-                  //       <Label htmlFor={item.name} mb={2}>
-                  //         <Checkbox
-                  //           id={item.name}
-                  //           name={item.name}
-                  //           onChange={markPurchased}
-                  //           checked={true}
-                  //           readOnly
-                  //         />
-                  //         {item.name}
-                  //       </Label>
-                  //     </li>
-                  //   );
-                  // } else {
-                  //   return (
-                  //     <li key={item.name}>
-                  //       <Label htmlFor={item.name} mb={2}>
-                  //         <Checkbox
-                  //           id={item.name}
-                  //           name={item.name}
-                  //           onClick={markPurchased}
-                  //           onChange={markPurchased}
-                  //         />
-                  //         {item.name}
-                  //       </Label>
-                  //     </li>
-                  //   );
-                  // }
                   return (
                     <li key={item.name}>
                       <Label htmlFor={item.name} mb={2}>
@@ -204,8 +187,18 @@ const ListItems = ({ userToken }) => {
                           name={item.name}
                           onClick={markPurchased}
                           onChange={markPurchased}
-                          checked={isWithinADay(item.purchaseDates.pop())}
-                          readOnly={isWithinADay(item.purchaseDates.pop())}
+                          checked={
+                            item.purchaseDates &&
+                            item.purchaseDates.length !== 0
+                              ? isWithinADay(item.purchaseDates.pop())
+                              : false
+                          }
+                          disabled={
+                            item.purchaseDates &&
+                            item.purchaseDates.length !== 0
+                              ? isWithinFiveMinutes(item.purchaseDates.pop())
+                              : false
+                          }
                         />
                         {item.name}
                       </Label>
