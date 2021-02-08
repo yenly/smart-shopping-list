@@ -15,6 +15,12 @@ import {
 } from 'theme-ui';
 import { useHistory } from 'react-router-dom';
 import dayjs from 'dayjs';
+import calculateEstimate from '../lib/estimates';
+import {
+  calculateDateDuration,
+  isWithinADay,
+  isWithinMinutes,
+} from '../lib/dateDurations';
 
 const ListItems = ({ userToken }) => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -48,20 +54,72 @@ const ListItems = ({ userToken }) => {
       .then((querySnapshot) => {
         querySnapshot.forEach((doc) => {
           const now = dayjs();
-          const itemDocRef = db.collection(userToken).doc(doc.id);
-          itemDocRef.update({
-            purchaseDate: now.valueOf(),
-          });
+          let item = doc.data();
+          let purchaseDates = item.purchaseDates;
+          // if(purchaseDates && isWithinMinutes(purchaseDates[purchaseDates.length - 1])) {
+          // undo checked box and revert data by
+          //   remove last purchase date
+          //   change estimatedDays = lastEstimate, lastEstimate = null
+          // } else do calculate estimate and save purchase date
+          if (
+            purchaseDates.length !== 0 &&
+            isWithinMinutes(purchaseDates[purchaseDates.length - 1])
+          ) {
+            const newPurchaseDates = purchaseDates.slice(
+              0,
+              purchaseDates.length - 1,
+            );
+            const newEstimatedDays =
+              item.lastEstimates.length !== 0 ? item.lastEstimates.pop() : null;
+            const newLastEstimates = item.lastEstimates || [];
+            const itemDocRef = db.collection(userToken).doc(doc.id);
+            itemDocRef.update({
+              purchaseDates: newPurchaseDates,
+              lastEstimates: newLastEstimates,
+              estimatedDays: newEstimatedDays,
+            });
+          } else {
+            const latestInterval =
+              item.purchaseDates.length >= 1
+                ? calculateLastInterval(purchaseDates[purchaseDates.length - 1])
+                : item.likelyToPurchase;
+
+            purchaseDates =
+              purchaseDates.length === 0
+                ? (purchaseDates = [now.valueOf()])
+                : [...purchaseDates, now.valueOf()];
+
+            const lastEstimate = item.estimatedDays || null;
+
+            const numberOfPurchases = purchaseDates.length;
+            const newEstimate = calculateEstimate(
+              lastEstimate,
+              latestInterval,
+              numberOfPurchases,
+            );
+            // save to lastEstimate to list of lastEstimates for reverting
+            const lastEstimates =
+              item.lastEstimates && item.lastEstimates.length !== 0
+                ? [...item.lastEstimates, lastEstimate]
+                : lastEstimate !== null
+                ? [lastEstimate]
+                : [];
+            const itemDocRef = db.collection(userToken).doc(doc.id);
+            itemDocRef.update({
+              purchaseDates: purchaseDates,
+              lastEstimates: lastEstimates,
+              estimatedDays: newEstimate,
+            });
+          }
         });
       })
       .catch((error) => console.error(error));
   };
 
-  const isWithinADay = (pDate) => {
-    const purchaseDate = dayjs(pDate);
-    const today = dayjs();
-    const cDate = purchaseDate.add(24, 'hour');
-    return cDate.isAfter(today);
+  const calculateLastInterval = (lastPurchase) => {
+    const mostRecent = dayjs(lastPurchase);
+    const duration = calculateDateDuration(mostRecent);
+    return Math.round(duration.asDays());
   };
 
   const handleSearchTermOnChange = (event) => {
@@ -77,6 +135,18 @@ const ListItems = ({ userToken }) => {
   const clearSearchTermInput = () => {
     setSearchTerm('');
     setDisplayClearIcon(false);
+  };
+
+  const isChecked = (pDates) => {
+    return pDates.length !== 0 && isWithinADay(pDates[pDates.length - 1]);
+  };
+
+  const isDisabled = (pDates) => {
+    return (
+      pDates.length !== 0 &&
+      isWithinADay(pDates[pDates.length - 1]) &&
+      !isWithinMinutes(pDates[pDates.length - 1])
+    );
   };
 
   return (
@@ -125,35 +195,21 @@ const ListItems = ({ userToken }) => {
               {listItems
                 .filter((item) => item.name.includes(searchTerm))
                 .map((item) => {
-                  if (isWithinADay(item.purchaseDate)) {
-                    return (
-                      <li key={item.name}>
-                        <Label htmlFor={item.name} mb={2}>
-                          <Checkbox
-                            id={item.name}
-                            name={item.name}
-                            checked
-                            readOnly
-                          />
-                          {item.name}
-                        </Label>
-                      </li>
-                    );
-                  } else {
-                    return (
-                      <li key={item.name}>
-                        <Label htmlFor={item.name} mb={2}>
-                          <Checkbox
-                            id={item.name}
-                            name={item.name}
-                            onClick={markPurchased}
-                            onChange={markPurchased}
-                          />
-                          {item.name}
-                        </Label>
-                      </li>
-                    );
-                  }
+                  return (
+                    <li key={item.name}>
+                      <Label htmlFor={item.name} mb={2}>
+                        <Checkbox
+                          id={item.name}
+                          name={item.name}
+                          onClick={markPurchased}
+                          onChange={markPurchased}
+                          checked={isChecked(item.purchaseDates)}
+                          disabled={isDisabled(item.purchaseDates)}
+                        />
+                        {item.name}
+                      </Label>
+                    </li>
+                  );
                 })}
             </ul>
           </Card>
