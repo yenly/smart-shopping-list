@@ -16,7 +16,7 @@ export const calculateDateDuration = (pDate) => {
 
 export const isWithinADay = (pDate) => {
   const duration = calculateDateDuration(pDate);
-  return Math.round(duration.asMinutes()) < 60;
+  return Math.round(duration.asHours()) <= 24;
 };
 
 export const isWithinMinutes = (pDate) => {
