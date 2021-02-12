@@ -12,6 +12,7 @@ import {
   Checkbox,
   Input,
   IconButton,
+  Flex,
 } from 'theme-ui';
 import { useHistory } from 'react-router-dom';
 import dayjs from 'dayjs';
@@ -22,7 +23,7 @@ import {
   isWithinMinutes,
 } from '../lib/dateDurations';
 
-const ListItems = ({ userToken }) => {
+const ListItems = ({ userToken, setAlertMsg }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [displayClearIcon, setDisplayClearIcon] = useState(false);
   const firebase = useContext(FirebaseContext);
@@ -149,6 +150,26 @@ const ListItems = ({ userToken }) => {
     );
   };
 
+  const deleteItem = (item) => {
+    if (window.confirm(`Are you sure you want to delete ${item.name}?`)) {
+      const foundItem = db.collection(userToken).doc(item.id);
+      foundItem
+        .delete()
+        .then(() => {
+          setAlertMsg({
+            message: `${item.name} deleted from your list!`,
+            msgType: 'success',
+          });
+          setTimeout(() => {
+            setAlertMsg('');
+          }, 3000);
+        })
+        .catch((error) => {
+          console.error(`Error removing item: ${error}`);
+        });
+    }
+  };
+
   return (
     <Fragment>
       {error && <strong>Error: {JSON.stringify(error)}</strong>}
@@ -197,17 +218,25 @@ const ListItems = ({ userToken }) => {
                 .map((item) => {
                   return (
                     <li key={item.name}>
-                      <Label htmlFor={item.name} mb={2}>
-                        <Checkbox
-                          id={item.name}
-                          name={item.name}
-                          onClick={markPurchased}
-                          onChange={markPurchased}
-                          checked={isChecked(item.purchaseDates)}
-                          disabled={isDisabled(item.purchaseDates)}
-                        />
-                        {item.name}
-                      </Label>
+                      <Flex>
+                        <Label htmlFor={item.name} mb={2}>
+                          <Checkbox
+                            id={item.name}
+                            name={item.name}
+                            onClick={markPurchased}
+                            onChange={markPurchased}
+                            checked={isChecked(item.purchaseDates)}
+                            disabled={isDisabled(item.purchaseDates)}
+                          />
+                          {item.name}
+                        </Label>
+                        <span
+                          className="delete"
+                          onClick={() => deleteItem(item)}
+                        >
+                          delete
+                        </span>
+                      </Flex>
                     </li>
                   );
                 })}

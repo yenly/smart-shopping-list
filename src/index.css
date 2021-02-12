@@ -74,3 +74,7 @@ ul {
   color: red;
   font-weight: bold;
 }
+
+.delete {
+  font-size: 0.85rem;
+}

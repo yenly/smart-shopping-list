@@ -74,7 +74,7 @@ function App() {
           <Switch>
             <Route path="/list">
               {userToken ? (
-                <ListItems userToken={userToken} />
+                <ListItems userToken={userToken} setAlertMsg={setAlertMsg} />
               ) : (
                 <Redirect to="/" />
               )}
