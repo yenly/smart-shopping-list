@@ -60,6 +60,26 @@ function App() {
     });
   };
 
+  const deleteItem = (item) => {
+    if (window.confirm(`Are you sure you want to delete ${item.name}?`)) {
+      const foundItem = db.collection(userToken).doc(item.id);
+      foundItem
+        .delete()
+        .then(() => {
+          setAlertMsg({
+            message: `${item.name} deleted from your list!`,
+            msgType: 'success',
+          });
+          setTimeout(() => {
+            setAlertMsg('');
+          }, 3000);
+        })
+        .catch((error) => {
+          console.error(`Error removing item: ${error}`);
+        });
+    }
+  };
+
   return (
     <ThemeProvider theme={sketchy}>
       <header>Smart Shopping List</header>
@@ -74,7 +94,7 @@ function App() {
           <Switch>
             <Route path="/list">
               {userToken ? (
-                <ListItems userToken={userToken} />
+                <ListItems userToken={userToken} deleteItem={deleteItem} />
               ) : (
                 <Redirect to="/" />
               )}

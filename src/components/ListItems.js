@@ -12,6 +12,7 @@ import {
   Checkbox,
   Input,
   IconButton,
+  Flex,
 } from 'theme-ui';
 import { useHistory } from 'react-router-dom';
 import dayjs from 'dayjs';
@@ -22,7 +23,7 @@ import {
   isWithinMinutes,
 } from '../lib/dateDurations';
 
-const ListItems = ({ userToken }) => {
+const ListItems = ({ userToken, deleteItem }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [displayClearIcon, setDisplayClearIcon] = useState(false);
   const firebase = useContext(FirebaseContext);
@@ -197,17 +198,25 @@ const ListItems = ({ userToken }) => {
                 .map((item) => {
                   return (
                     <li key={item.name}>
-                      <Label htmlFor={item.name} mb={2}>
-                        <Checkbox
-                          id={item.name}
-                          name={item.name}
-                          onClick={markPurchased}
-                          onChange={markPurchased}
-                          checked={isChecked(item.purchaseDates)}
-                          disabled={isDisabled(item.purchaseDates)}
-                        />
-                        {item.name}
-                      </Label>
+                      <Flex>
+                        <Label htmlFor={item.name} mb={2}>
+                          <Checkbox
+                            id={item.name}
+                            name={item.name}
+                            onClick={markPurchased}
+                            onChange={markPurchased}
+                            checked={isChecked(item.purchaseDates)}
+                            disabled={isDisabled(item.purchaseDates)}
+                          />
+                          {item.name}
+                        </Label>
+                        <span
+                          className="delete"
+                          onClick={() => deleteItem(item)}
+                        >
+                          delete
+                        </span>
+                      </Flex>
                     </li>
                   );
                 })}
