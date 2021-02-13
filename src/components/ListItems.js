@@ -152,12 +152,13 @@ const ListItems = ({ userToken, deleteItem }) => {
 
   const howSoon = (days) => {
     switch (true) {
+      case days == null:
+      case days > 30:
+        return 'not-soon';
       case days <= 7:
         return 'soon';
       case days > 7 && days <= 30:
         return 'kind-of-soon';
-      case days > 30:
-        return 'not-soon';
       default:
         return;
     }
