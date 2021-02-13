@@ -150,6 +150,33 @@ const ListItems = ({ userToken, deleteItem }) => {
     );
   };
 
+  const howSoon = (days) => {
+    switch (true) {
+      case days <= 7:
+        return 'soon';
+      case days > 7 && days <= 30:
+        return 'kind-of-soon';
+      case days > 30:
+        return 'not-soon';
+      default:
+        return;
+    }
+  };
+
+  const isInactive = (item) => {
+    if (item.estimatedDays === null) {
+      return false;
+    }
+    const lastPurchaseDate = dayjs(
+      item.purchaseDates[item.purchaseDates.length - 1],
+    );
+    const duration = calculateDateDuration(lastPurchaseDate);
+    const daysSincePurchase = Math.round(duration.asDays());
+    return (
+      item.purchaseDates.length === 1 && daysSincePurchase >= item.estimatedDays
+    );
+  };
+  // console.log({listItems})
   return (
     <Fragment>
       {error && <strong>Error: {JSON.stringify(error)}</strong>}
@@ -196,13 +223,24 @@ const ListItems = ({ userToken, deleteItem }) => {
               {listItems
                 .filter((item) => item.name.includes(searchTerm))
                 .map((item) => {
+                  let itemStatus = '';
+                  if (isInactive(item)) {
+                    itemStatus = 'inactive';
+                  } else {
+                    itemStatus = howSoon(item.estimatedDays);
+                  }
                   return (
                     <li key={item.name}>
                       <Flex>
-                        <Label htmlFor={item.name} mb={2}>
+                        <Label
+                          aria-label={itemStatus}
+                          htmlFor={item.name}
+                          mb={2}
+                        >
                           <Checkbox
                             id={item.name}
                             name={item.name}
+                            aria-label={itemStatus}
                             onClick={markPurchased}
                             onChange={markPurchased}
                             checked={isChecked(item.purchaseDates)}

@@ -78,3 +78,23 @@ ul {
 .delete {
   font-size: 0.85rem;
 }
+
+[aria-label='soon']::before {
+  content: '* ';
+  color: red;
+}
+
+[aria-label='kind-of-soon']::before {
+  content: '* ';
+  color: orange;
+}
+
+[aria-label='not-soon']::before {
+  content: '* ';
+  color: yellowgreen;
+}
+
+[aria-label='inactive']::before {
+  content: '* ';
+  color: lightgray;
+}
