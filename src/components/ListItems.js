@@ -173,7 +173,7 @@ const ListItems = ({ userToken, deleteItem }) => {
     console.log(item.name, { daysSincePurchase }, item.likelyToPurchase);
     return (
       item.purchaseDates.length === 1 &&
-      daysSincePurchase * 2 >= item.likelyToPurchase
+      daysSincePurchase >= item.likelyToPurchase * 2
     );
   };
 
