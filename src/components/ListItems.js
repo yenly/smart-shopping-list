@@ -170,17 +170,23 @@ const ListItems = ({ userToken, deleteItem }) => {
     );
     const duration = calculateDateDuration(lastPurchaseDate);
     const daysSincePurchase = Math.round(duration.asDays());
-    console.log(item.name, { daysSincePurchase }, item.likelyToPurchase);
     return (
-      item.purchaseDates.length === 1 &&
+      item.purchaseDates.length === 1 ||
       daysSincePurchase >= item.likelyToPurchase * 2
     );
   };
 
   const sortedItems = listItems.sort((a, b) => {
-    return a.likelyToPurchase - b.likelyToPurchase;
+    switch (true) {
+      case !isInactive(a) && isInactive(b):
+        return 1;
+      case isInactive(a) && !isInactive(b):
+        return 1;
+      default:
+        return a.likelyToPurchase - b.likelyToPurchase;
+    }
   });
-  console.log({ sortedItems });
+
   return (
     <Fragment>
       {error && <strong>Error: {JSON.stringify(error)}</strong>}
