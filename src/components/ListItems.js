@@ -163,15 +163,17 @@ const ListItems = ({ userToken, deleteItem }) => {
     }
   };
 
+  // TODO: redefine inactive criteria in accordance to COVID shopping habits
   const isInactive = (item) => {
     const lastPurchaseDate = dayjs(
       item.purchaseDates[item.purchaseDates.length - 1],
     );
     const duration = calculateDateDuration(lastPurchaseDate);
     const daysSincePurchase = Math.round(duration.asDays());
+    console.log(item.name, { daysSincePurchase }, item.likelyToPurchase);
     return (
       item.purchaseDates.length === 1 &&
-      daysSincePurchase >= item.likelyToPurchase
+      daysSincePurchase * 2 >= item.likelyToPurchase
     );
   };
 
@@ -243,7 +245,7 @@ const ListItems = ({ userToken, deleteItem }) => {
                             id={item.name}
                             name={item.name}
                             aria-label={itemStatus}
-                            onClick={markPurchased}
+                            onClick={markPurchased} // for older verions of IE
                             onChange={markPurchased}
                             checked={isChecked(item.purchaseDates)}
                             disabled={isDisabled(item.purchaseDates)}
