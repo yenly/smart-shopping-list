@@ -58,7 +58,6 @@ const AddItem = ({ userToken, setAlertMsg }) => {
         likelyToPurchase: likelyToPurchase,
         purchaseDates: [],
         lastEstimates: null,
-        estimatedDays: null,
       };
       if (userToken) {
         if (isDuplicate(itemName)) {
