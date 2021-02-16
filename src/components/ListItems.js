@@ -29,7 +29,7 @@ const ListItems = ({ userToken, deleteItem }) => {
   const firebase = useContext(FirebaseContext);
   const db = firebase.firestore();
   const [listItems, loading, error] = useCollectionData(
-    db.collection(userToken),
+    db.collection(userToken).orderBy('name', 'asc'),
     {
       snapshortListenOptions: {
         includeMetadataChanges: true,
@@ -60,7 +60,7 @@ const ListItems = ({ userToken, deleteItem }) => {
           // if(purchaseDates && isWithinMinutes(purchaseDates[purchaseDates.length - 1])) {
           // undo checked box and revert data by
           //   remove last purchase date
-          //   change estimatedDays = lastEstimate, lastEstimate = null
+          //   change likelyToPurchase = lastEstimate, lastEstimate = null
           // } else do calculate estimate and save purchase date
           if (
             purchaseDates.length !== 0 &&
@@ -77,7 +77,7 @@ const ListItems = ({ userToken, deleteItem }) => {
             itemDocRef.update({
               purchaseDates: newPurchaseDates,
               lastEstimates: newLastEstimates,
-              estimatedDays: newEstimatedDays,
+              likelyToPurchase: newEstimatedDays,
             });
           } else {
             const latestInterval =
@@ -90,7 +90,7 @@ const ListItems = ({ userToken, deleteItem }) => {
                 ? (purchaseDates = [now.valueOf()])
                 : [...purchaseDates, now.valueOf()];
 
-            const lastEstimate = item.estimatedDays || null;
+            const lastEstimate = item.likelyToPurchase;
 
             const numberOfPurchases = purchaseDates.length;
             const newEstimate = calculateEstimate(
@@ -102,14 +102,13 @@ const ListItems = ({ userToken, deleteItem }) => {
             const lastEstimates =
               item.lastEstimates && item.lastEstimates.length !== 0
                 ? [...item.lastEstimates, lastEstimate]
-                : lastEstimate !== null
-                ? [lastEstimate]
-                : [];
+                : [lastEstimate];
+
             const itemDocRef = db.collection(userToken).doc(doc.id);
             itemDocRef.update({
               purchaseDates: purchaseDates,
               lastEstimates: lastEstimates,
-              estimatedDays: newEstimate,
+              likelyToPurchase: newEstimate,
             });
           }
         });
@@ -149,6 +148,44 @@ const ListItems = ({ userToken, deleteItem }) => {
       !isWithinMinutes(pDates[pDates.length - 1])
     );
   };
+
+  // if null, set new label instead
+  const howSoon = (days) => {
+    switch (true) {
+      case days <= 7:
+        return 'soon';
+      case days > 7 && days < 30:
+        return 'kind-of-soon';
+      case days >= 30:
+        return 'not-soon';
+      default:
+        return;
+    }
+  };
+
+  // TODO: redefine inactive criteria in accordance to COVID shopping habits
+  const isInactive = (item) => {
+    const lastPurchaseDate = dayjs(
+      item.purchaseDates[item.purchaseDates.length - 1],
+    );
+    const duration = calculateDateDuration(lastPurchaseDate);
+    const daysSincePurchase = Math.round(duration.asDays());
+    return (
+      item.purchaseDates.length === 1 ||
+      daysSincePurchase >= item.likelyToPurchase * 2
+    );
+  };
+
+  const sortedItems = listItems.sort((a, b) => {
+    switch (true) {
+      case !isInactive(a) && isInactive(b):
+        return 1;
+      case isInactive(a) && !isInactive(b):
+        return 1;
+      default:
+        return a.likelyToPurchase - b.likelyToPurchase;
+    }
+  });
 
   return (
     <Fragment>
@@ -193,17 +230,28 @@ const ListItems = ({ userToken, deleteItem }) => {
             }}
           >
             <ul>
-              {listItems
+              {sortedItems
                 .filter((item) => item.name.includes(searchTerm))
                 .map((item) => {
+                  let itemStatus = '';
+                  if (isInactive(item)) {
+                    itemStatus = 'inactive';
+                  } else {
+                    itemStatus = howSoon(item.likelyToPurchase);
+                  }
                   return (
                     <li key={item.name}>
                       <Flex>
-                        <Label htmlFor={item.name} mb={2}>
+                        <Label
+                          aria-label={itemStatus}
+                          htmlFor={item.name}
+                          mb={2}
+                        >
                           <Checkbox
                             id={item.name}
                             name={item.name}
-                            onClick={markPurchased}
+                            aria-label={itemStatus}
+                            onClick={markPurchased} // for older verions of IE
                             onChange={markPurchased}
                             checked={isChecked(item.purchaseDates)}
                             disabled={isDisabled(item.purchaseDates)}
