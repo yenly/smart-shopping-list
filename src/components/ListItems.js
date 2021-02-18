@@ -57,7 +57,7 @@ const ListItems = ({ userToken, deleteItem }) => {
           const now = dayjs();
           let item = doc.data();
           let purchaseDates = item.purchaseDates;
-          // if(purchaseDates && isWithinMinutes(purchaseDates[purchaseDates.length - 1])) {
+          // if(purchaseDates exists and last purchaseDate is within 5 minutes to now) {
           // undo checked box and revert data by
           //   remove last purchase date
           //   change likelyToPurchase = lastEstimate, lastEstimate = null
@@ -98,7 +98,7 @@ const ListItems = ({ userToken, deleteItem }) => {
               latestInterval,
               numberOfPurchases,
             );
-            // save to lastEstimate to list of lastEstimates for reverting
+            // save lastEstimate to list of lastEstimates for reverting
             const lastEstimates =
               item.lastEstimates && item.lastEstimates.length !== 0
                 ? [...item.lastEstimates, lastEstimate]
@@ -149,7 +149,6 @@ const ListItems = ({ userToken, deleteItem }) => {
     );
   };
 
-  // if null, set new label instead
   const howSoon = (days) => {
     switch (true) {
       case days <= 7:
@@ -170,8 +169,9 @@ const ListItems = ({ userToken, deleteItem }) => {
     );
     const duration = calculateDateDuration(lastPurchaseDate);
     const daysSincePurchase = Math.round(duration.asDays());
+
     return (
-      item.purchaseDates.length === 1 ||
+      item.purchaseDates.length === 1 &&
       daysSincePurchase >= item.likelyToPurchase * 2
     );
   };
@@ -179,7 +179,7 @@ const ListItems = ({ userToken, deleteItem }) => {
   const sortedItems = listItems.sort((a, b) => {
     switch (true) {
       case !isInactive(a) && isInactive(b):
-        return 1;
+        return -1;
       case isInactive(a) && !isInactive(b):
         return 1;
       default:
